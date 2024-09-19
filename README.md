@@ -4,7 +4,7 @@ Bounces a ball around the terminal and destroys barriers.
 
 ## License
 
-Copyright 2023 David Edwards
+Copyright 2024 David Edwards
 
 Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with the License. You may obtain a copy of the License at
 

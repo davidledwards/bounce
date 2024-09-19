@@ -204,6 +204,7 @@ impl Player {
             self.out.push_str(ansi::set_color(self.line_color).as_str());
             self.out.push_str(format!("{barrier}").as_str());
         }
+        self.draw();
     }
 
     fn generate(rows: u16, cols: u16, lines: u32) -> HashMap<Point, Barrier> {
