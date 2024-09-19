@@ -21,6 +21,7 @@ impl Point {
 enum Barrier {
     Horizontal,
     Vertical,
+    Corner,
 }
 
 impl Display for Barrier {
@@ -28,6 +29,7 @@ impl Display for Barrier {
         let c = match self {
             Barrier::Horizontal => '-',
             Barrier::Vertical => '|',
+            Barrier::Corner => '+',
         };
         write!(f, "{c}")
     }
@@ -86,10 +88,18 @@ impl Bounce {
         // Detect ball collision with barrier and change trajectory.
         let traj = match self.barriers.remove(&self.ball) {
             Some(barrier) => match (self.traj, barrier) {
-                (RightUp, Horizontal) | (LeftDown, Vertical) => RightDown,
-                (RightUp, Vertical) | (LeftDown, Horizontal) => LeftUp,
-                (RightDown, Horizontal) | (LeftUp, Vertical) => RightUp,
-                (RightDown, Vertical) | (LeftUp, Horizontal) => LeftDown,
+                (RightUp, Horizontal) => RightDown,
+                (RightUp, Vertical) => LeftUp,
+                (RightUp, Corner) => LeftDown,
+                (RightDown, Horizontal) => RightUp,
+                (RightDown, Vertical) => LeftDown,
+                (RightDown, Corner) => LeftUp,
+                (LeftDown, Vertical) => RightDown,
+                (LeftDown, Horizontal) => LeftUp,
+                (LeftDown, Corner) => RightUp,
+                (LeftUp, Vertical) => RightUp,
+                (LeftUp, Horizontal) => LeftDown,
+                (LeftUp, Corner) => RightDown,
             }
             None => self.traj,
         };
@@ -197,12 +207,24 @@ impl Bounce {
             if rand.read::<usize>() % 2 == 0 {
                 let col_end = col_start + rand.read::<u16>() % (cols - col_start);
                 for col in col_start..col_end {
-                    barriers.insert(Point::new(row_start, col), Barrier::Horizontal);
+                    let p = Point::new(row_start, col);
+                    let barrier = match barriers.get(&p) {
+                        Some(Barrier::Vertical) => Barrier::Corner,
+                        Some(b) => *b,
+                        None => Barrier::Horizontal,
+                    };
+                    barriers.insert(p, barrier);
                 }
             } else {
                 let row_end = row_start + rand.read::<u16>() % (rows - row_start);
                 for row in row_start..row_end {
-                    barriers.insert(Point::new(row, col_start), Barrier::Vertical);
+                    let p = Point::new(row, col_start);
+                    let barrier = match barriers.get(&p) {
+                        Some(Barrier::Horizontal) => Barrier::Corner,
+                        Some(b) => *b,
+                        None => Barrier::Vertical,
+                    };
+                    barriers.insert(p, barrier);
                 }
             };
         }
