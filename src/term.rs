@@ -1,8 +1,7 @@
+use crate::Result;
 use libc::{c_int, winsize, STDOUT_FILENO, TIOCGWINSZ};
 use std::io::Error;
 use std::mem::MaybeUninit;
-
-type Result<T> = std::result::Result<T, String>;
 
 pub fn term_size() -> Result<(u16, u16)> {
     let win_size = unsafe {

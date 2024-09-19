@@ -1,5 +1,3 @@
-//! ANSI escape sequences.
-
 use crate::bounce::Point;
 
 pub const CSI: &str = "\x1b[";

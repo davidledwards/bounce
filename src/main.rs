@@ -12,7 +12,7 @@ use std::process::ExitCode;
 use std::thread;
 use std::time::Duration;
 
-type Result<T> = std::result::Result<T, String>;
+pub type Result<T> = std::result::Result<T, String>;
 
 const USAGE: &str = r#"
 usage: bounce OPTIONS

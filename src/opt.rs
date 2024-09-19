@@ -1,6 +1,5 @@
+use crate::Result;
 use std::str::FromStr;
-
-type Result<T> = std::result::Result<T, String>;
 
 pub struct Options {
     pub help: bool,
