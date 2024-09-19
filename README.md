@@ -2,6 +2,38 @@
 
 Bounces a ball around the terminal and destroys barriers.
 
+## Usage
+
+Show options.
+
+```shell
+bounce --help
+```
+
+Increase the ball speed by reducing the delay between movements.
+
+```shell
+bounce --delay 20
+```
+
+Create fewer barrier lines if your terminal size is small.
+
+```shell
+bounce --lines 25
+```
+
+Change the ball and line colors.
+
+```shell
+bounce --ball-color gray --line-color red
+```
+
+Use a different character for the ball.
+
+```shell
+bounce --ball @
+```
+
 ## License
 
 Copyright 2024 David Edwards
