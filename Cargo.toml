@@ -1,0 +1,14 @@
+[package]
+name = "bounce"
+version = "0.1.0"
+edition = "2021"
+authors = ["David Edwards <david.l.edwards@gmail.com>"]
+description = "Bounces balls around the terminal and destroys barriers"
+readme = "README.md"
+homepage = "https://github.com/davidledwards/bounce"
+repository = "https://github.com/davidledwards/bounce"
+license = "Apache-2.0"
+
+[dependencies]
+libc = "0.2"
+random = "0.14"
