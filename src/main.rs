@@ -1,33 +1,36 @@
 mod ansi;
-mod bounce;
 mod opt;
+mod play;
 mod term;
 
-use crate::bounce::Bounce;
+use crate::play::Player;
 use crate::opt::Options;
-use crate::term::term_size;
 use std::env;
-use std::io::{self, IsTerminal};
 use std::process::ExitCode;
 use std::thread;
 use std::time::Duration;
 
+// Simple error type used across project.
 pub type Result<T> = std::result::Result<T, String>;
 
 const USAGE: &str = r#"
 usage: bounce OPTIONS
        bounce --help
 
-  optional:
+  Bounces a ball around the terminal and destroys barriers. The program stops
+  when all barriers are gone, though press ^C to exit prematurely.
+
+  options:
     --delay MILLIS      : delay in milliseconds before ball advances
                           (default: 50)
     --lines COUNT       : number of horizontal and vertical barriers
                           (default: 50)
-    --ball-color COLOR  : color of ball (default: blue)
-    --line-color COLOR  : color of lines (default: red)
+    --ball CHAR         : character to use for ball (default is '●')
+    --ball-color COLOR  : color of ball (default: red)
+    --line-color COLOR  : color of lines (default: gray)
 
-  colors:
-    red, green, yellow, blue, magenta, cyan, white
+  COLOR options:
+    red, green, yellow, blue, magenta, cyan, white, gray
 "#;
 
 fn main() -> ExitCode {
@@ -46,21 +49,13 @@ fn run() -> Result<()> {
     if opts.help {
         println!("{USAGE}");
     } else {
-        let (rows, cols) = detect_size()?;
-        let mut bounce = Bounce::new(rows, cols, opts.lines, opts.ball_color, opts.line_color);
+        let (rows, cols) = term::size()?;
+        let mut player = Player::new(rows, cols, &opts);
         let delay = Duration::from_millis(opts.delay);
-        while bounce.more() {
-            bounce.next();
+        while player.more() {
+            player.next();
             thread::sleep(delay);
         }
     }
     Ok(())
-}
-
-fn detect_size() -> Result<(u16, u16)> {
-    if io::stdin().is_terminal() {
-        Ok(term_size()?)
-    } else {
-        Err("not a terminal".to_string())
-    }
 }

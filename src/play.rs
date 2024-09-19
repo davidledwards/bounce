@@ -1,4 +1,7 @@
+//! Player for ball bouncing.
+
 use crate::ansi;
+use crate::opt::Options;
 use random::Source;
 use std::collections::HashMap;
 use std::fmt::{self, Display, Formatter};
@@ -43,9 +46,10 @@ enum Trajectory {
     LeftDown,
 }
 
-pub struct Bounce {
+pub struct Player {
     rows: u16,
     cols: u16,
+    ball_char: char,
     ball_color: u8,
     line_color: u8,
     barriers: HashMap<Point, Barrier>,
@@ -54,16 +58,15 @@ pub struct Bounce {
     out: String,
 }
 
-const BALL_CHAR: char = '●';
-
-impl Bounce {
-    pub fn new(rows: u16, cols: u16, lines: u32, ball_color: u8, line_color: u8) -> Bounce {
-        let mut this = Bounce {
+impl Player {
+    pub fn new(rows: u16, cols: u16, opts: &Options) -> Player {
+        let mut this = Player {
             rows,
             cols,
-            ball_color,
-            line_color,
-            barriers: Bounce::generate(rows, cols, lines),
+            ball_char: opts.ball_char,
+            ball_color: opts.ball_color,
+            line_color: opts.line_color,
+            barriers: Player::generate(rows, cols, opts.lines),
             ball: Point::new(rows / 2, cols / 2),
             traj: Trajectory::RightDown,
             out: String::new(),
@@ -77,16 +80,18 @@ impl Bounce {
     }
 
     pub fn next(&mut self) {
+        self.clear_ball();
+        let traj = self.next_trajectory();
+        (self.ball, self.traj) = self.next_position(traj);
+        self.show_ball();
+        self.draw();
+    }
+
+    fn next_trajectory(&mut self) -> Trajectory {
         use Trajectory::*;
         use Barrier::*;
 
-        // Clear current ball position.
-        self.out.push_str(ansi::set_cursor(&self.ball).as_str());
-        self.out.push_str(ansi::reset_color().as_str());
-        self.out.push(' ');
-
-        // Detect ball collision with barrier and change trajectory.
-        let traj = match self.barriers.remove(&self.ball) {
+        match self.barriers.remove(&self.ball) {
             Some(barrier) => match (self.traj, barrier) {
                 (RightUp, Horizontal) => RightDown,
                 (RightUp, Vertical) => LeftUp,
@@ -102,26 +107,10 @@ impl Bounce {
                 (LeftUp, Corner) => RightDown,
             }
             None => self.traj,
-        };
-
-        // Set ball and trajectory to next position.
-        (self.ball, self.traj) = self.next_position(&traj);
-
-        // Show new ball position.
-        self.out.push_str(ansi::set_cursor(&self.ball).as_str());
-        self.out.push_str(ansi::set_color(self.ball_color).as_str());
-        self.out.push(BALL_CHAR);
-
-        // Always set cursor at bottom of screen for aesthetic reasons.
-        self.out.push_str(ansi::set_cursor_to(self.rows, 0).as_str());
-
-        // Send output to terminal.
-        print!("{}", self.out);
-        let _ = io::stdout().flush();
-        self.out.clear();
+        }
     }
 
-    fn next_position(&mut self, traj: &Trajectory) -> (Point, Trajectory) {
+    fn next_position(&mut self, traj: Trajectory) -> (Point, Trajectory) {
         use Trajectory::*;
 
         let (row, col, traj) = match traj {
@@ -187,6 +176,25 @@ impl Bounce {
             }
         };
         (Point::new(row, col), traj)
+    }
+
+    fn clear_ball(&mut self) {
+        self.out.push_str(ansi::set_cursor(&self.ball).as_str());
+        self.out.push_str(ansi::reset_color().as_str());
+        self.out.push(' ');
+    }
+
+    fn show_ball(&mut self) {
+        self.out.push_str(ansi::set_cursor(&self.ball).as_str());
+        self.out.push_str(ansi::set_color(self.ball_color).as_str());
+        self.out.push(self.ball_char);
+    }
+
+    fn draw(&mut self) {
+        self.out.push_str(ansi::set_cursor_to(self.rows, 0).as_str());
+        print!("{}", self.out);
+        let _ = io::stdout().flush();
+        self.out.clear();
     }
 
     fn render(&mut self) {

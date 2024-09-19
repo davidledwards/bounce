@@ -1,10 +1,29 @@
+//! Options parser.
+
 use crate::Result;
+use crate::ansi;
+use std::collections::HashMap;
 use std::str::FromStr;
+use std::sync::LazyLock;
+
+static COLORS: LazyLock<HashMap<&str, u8>> = LazyLock::new(|| {
+    HashMap::from([
+        ("red", ansi::RED),
+        ("green", ansi::GREEN),
+        ("yellow", ansi::YELLOW),
+        ("blue", ansi::BLUE),
+        ("magenta", ansi::MAGENTA),
+        ("cyan", ansi::CYAN),
+        ("white", ansi::WHITE),
+        ("gray", ansi::GRAY),
+    ])
+});
 
 pub struct Options {
     pub help: bool,
     pub lines: u32,
     pub delay: u64,
+    pub ball_char: char,
     pub ball_color: u8,
     pub line_color: u8,
 }
@@ -15,8 +34,9 @@ impl Default for Options {
             help: false,
             lines: 50,
             delay: 50,
-            ball_color: 34,
-            line_color: 31,
+            ball_char: '●',
+            ball_color: ansi::RED,
+            line_color: ansi::GRAY,
         }
     }
 }
@@ -33,6 +53,7 @@ impl Options {
                 "--help" => opts.help = true,
                 "--lines" => opts.lines = parse_number(&arg, it.next())?,
                 "--delay" => opts.delay = parse_number(&arg, it.next())?,
+                "--ball" => opts.ball_char = parse_ball(&arg, it.next())?,
                 "--ball-color" => opts.ball_color = parse_color(&arg, it.next())?,
                 "--line-color" => opts.line_color = parse_color(&arg, it.next())?,
                 _ => return Err(format!("{arg}: unexpected argument")),
@@ -55,17 +76,21 @@ where
     }
 }
 
+fn parse_ball(arg: &str, next_arg: Option<String>) -> Result<char> {
+    match next_arg {
+        Some(a) => match a.chars().next() {
+            Some(c) => Ok(c),
+            None => Err(format!("{arg}: expecting character")),
+        }
+        None => Err(format!("{arg}: expecting character"))
+    }
+}
+
 fn parse_color(arg: &str, next_arg: Option<String>) -> Result<u8> {
     match next_arg {
-        Some(a) => match a.to_lowercase().as_str() {
-            "red" => Ok(31),
-            "green" => Ok(32),
-            "yellow" => Ok(33),
-            "blue" => Ok(34),
-            "magenta" => Ok(35),
-            "cyan" => Ok(36),
-            "white" => Ok(37),
-            _ => Err(format!("{a}: unrecognized color")),
+        Some(a) => match COLORS.get(a.to_lowercase().as_str()) {
+            Some(color) => Ok(*color),
+            None => Err(format!("{a}: unrecognized color")),
         }
         None => Err(format!("{arg}: expecting color"))
     }

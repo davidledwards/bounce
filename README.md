@@ -1,6 +1,6 @@
 # bounce
 
-Bounces balls around the terminal and destroys barriers.
+Bounces a ball around the terminal and destroys barriers.
 
 ## License
 
